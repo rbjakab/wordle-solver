@@ -13,15 +13,13 @@ export const getLettersStatuses = (
     for (let j = 0; j < guess.length; j++) {
       const letter = guess[j]
 
-      if (charObj[letter] === undefined) {
-        charObj[letter] = 'absent'
-      } else if (charObj[letter] === 'absent' && statuses[i][j] !== 'absent') {
-        charObj[letter] = statuses[i][j]
-      } else if (
-        charObj[letter] === 'present' &&
-        statuses[i][j] === 'correct'
+      if (
+        (charObj[letter] !== 'present' || statuses[i][j] === 'correct') &&
+        charObj[letter] !== 'correct'
       ) {
         charObj[letter] = statuses[i][j]
+      } else {
+        // do nothing
       }
     }
   }

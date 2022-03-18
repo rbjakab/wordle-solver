@@ -41,6 +41,8 @@ export const Keyboard = ({
   statuses,
 }: Props) => {
   const charStatuses = getLettersStatuses(guesses, statuses)
+  console.log('charStatuses', charStatuses)
+  console.log('statuses', statuses)
 
   const onClick = (value: string) => {
     if (value === 'ENTER') {
