@@ -77,36 +77,16 @@ function App() {
     getStoredIsHighContrastMode()
   )
   const [isRevealing, setIsRevealing] = useState(false)
-  const [guesses, setGuesses] = useState<string[]>(() => {
+
+  const [playState, setPlayState] = useState<{
+    guesses: string[]
+    statuses: CharStatus[][]
+  }>(() => {
     const loaded = loadGameStateFromLocalStorage()
-    if (loaded?.solution !== solution) {
-      return []
-    }
-    const gameWasWon = loaded.guesses.includes(solution)
-    if (gameWasWon) {
-      setIsGameWon(true)
-    }
-    if (loaded.guesses.length === MAX_CHALLENGES && !gameWasWon) {
-      setIsGameLost(true)
-      showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
-        persist: true,
-      })
-    }
-    return loaded.guesses
-  })
-  const [statuses, setStatuses] = useState<CharStatus[][]>(() => {
-    const load = loadStatusesToLocalStorage()
+    const guessesValue = loaded?.guesses ?? []
+    const statusesValue = loadStatusesToLocalStorage()
 
-    if (
-      guesses === undefined ||
-      guesses.length === 0 ||
-      load === undefined ||
-      load.length === 0
-    ) {
-      return []
-    }
-
-    return load
+    return { guesses: guessesValue, statuses: statusesValue }
   })
 
   const [stats, setStats] = useState(() => loadStats())
@@ -147,7 +127,10 @@ function App() {
   }
 
   const handleHardMode = (isHard: boolean) => {
-    if (guesses.length === 0 || localStorage.getItem('gameMode') === 'hard') {
+    if (
+      playState.guesses.length === 0 ||
+      localStorage.getItem('gameMode') === 'hard'
+    ) {
       setIsHardMode(isHard)
       localStorage.setItem('gameMode', isHard ? 'hard' : 'normal')
     } else {
@@ -156,23 +139,27 @@ function App() {
   }
 
   const handleEditMode = (editMode: CharStatus) => {
-    const newStatuses = JSON.parse(JSON.stringify(statuses))
+    const newStatuses = JSON.parse(JSON.stringify(playState.statuses))
+
     newStatuses[editCell.row][editCell.column] = editMode
-    setStatuses(newStatuses)
+
+    setPlayState({ guesses: playState.guesses, statuses: newStatuses })
+
     const newEditCellColumn =
-      editCell.row === guesses.length - 1 &&
+      editCell.row === playState.guesses.length - 1 &&
       editCell.column === MAX_WORD_LENGTH - 1
         ? editCell.column
         : editCell.column === MAX_WORD_LENGTH - 1
         ? 0
         : editCell.column + 1
     const newEditCellRow =
-      editCell.row === guesses.length - 1 &&
+      editCell.row === playState.guesses.length - 1 &&
       editCell.column === MAX_WORD_LENGTH - 1
         ? editCell.row
         : editCell.column === MAX_WORD_LENGTH - 1
         ? editCell.row + 1
         : editCell.row
+
     setEditCell({ row: newEditCellRow, column: newEditCellColumn })
   }
 
@@ -187,7 +174,10 @@ function App() {
       newEditCell.column = newEditCell.column + 1
     }
 
-    if (arrowKey === 'ARROWDOWN' && editCell.row !== guesses.length - 1) {
+    if (
+      arrowKey === 'ARROWDOWN' &&
+      editCell.row !== playState.guesses.length - 1
+    ) {
       newEditCell.row = newEditCell.row + 1
     }
 
@@ -199,19 +189,26 @@ function App() {
   }
 
   const handleRemoveIconClick = (guessRow: number) => {
-    setGuesses(guesses.filter((_, i) => i !== guessRow))
-    setStatuses(statuses.filter((_, i) => i !== guessRow))
+    setPlayState({
+      guesses: playState.guesses.filter((_, i) => i !== guessRow),
+      statuses: playState.statuses.filter((_, i) => i !== guessRow),
+    })
   }
 
   const handleWordSelect = (word: string) => {
-    if (guesses.length === MAX_CHALLENGES - 1) return
+    if (playState.guesses.length === MAX_CHALLENGES - 1) return
 
-    setGuesses([...guesses, localeAwareUpperCase(word)])
     const newStatusValue: CharStatus[][] = [
-      ...statuses,
+      ...playState.statuses,
       unicodeSplit(word).map((_) => 'absent'),
     ]
-    setStatuses(newStatusValue)
+    const newGuess = localeAwareUpperCase(word)
+    setPlayState((prevState) => {
+      return {
+        guesses: [...prevState.guesses, newGuess],
+        statuses: newStatusValue,
+      }
+    })
   }
 
   const handleHighContrastMode = (isHighContrast: boolean) => {
@@ -224,16 +221,16 @@ function App() {
   }
 
   useEffect(() => {
-    saveGameStateToLocalStorage({ guesses, solution })
-  }, [guesses])
+    saveGameStateToLocalStorage({ guesses: playState.guesses, solution })
+  }, [playState.guesses])
 
   useEffect(() => {
-    saveStatusesToLocalStorage(statuses)
-  }, [statuses])
+    saveStatusesToLocalStorage(playState.statuses)
+  }, [playState.statuses])
 
   useEffect(() => {
-    setResults(calculateResults(statuses, guesses))
-  }, [guesses, statuses])
+    setResults(calculateResults(playState.statuses, playState.guesses))
+  }, [playState.guesses, playState.statuses])
 
   useEffect(() => {
     if (isGameWon) {
@@ -273,7 +270,7 @@ function App() {
 
     if (
       unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH &&
-      guesses.length < MAX_CHALLENGES &&
+      playState.guesses.length < MAX_CHALLENGES &&
       !isGameWon
     ) {
       setCurrentGuess(`${currentGuess}${value}`)
@@ -307,7 +304,10 @@ function App() {
 
     // enforce hard mode - all guesses must contain all previously revealed letters
     if (isHardMode) {
-      const firstMissingReveal = findFirstUnusedReveal(currentGuess, guesses)
+      const firstMissingReveal = findFirstUnusedReveal(
+        currentGuess,
+        playState.guesses
+      )
       if (firstMissingReveal) {
         setCurrentRowClass('jiggle')
         return showErrorAlert(firstMissingReveal, {
@@ -327,24 +327,28 @@ function App() {
 
     if (
       unicodeLength(currentGuess) === MAX_WORD_LENGTH &&
-      guesses.length < MAX_CHALLENGES &&
+      playState.guesses.length < MAX_CHALLENGES &&
       !isGameWon
     ) {
-      setGuesses([...guesses, currentGuess])
       const newStatusValue: CharStatus[][] = [
-        ...statuses,
+        ...playState.statuses,
         unicodeSplit(currentGuess).map((_) => 'absent'),
       ]
-      setStatuses(newStatusValue)
+      setPlayState((prevState) => {
+        return {
+          guesses: [...prevState.guesses, currentGuess],
+          statuses: newStatusValue,
+        }
+      })
       setCurrentGuess('')
 
       if (winningWord) {
-        setStats(addStatsForCompletedGame(stats, guesses.length))
+        setStats(addStatsForCompletedGame(stats, playState.guesses.length))
         return setIsGameWon(true)
       }
 
-      if (guesses.length === MAX_CHALLENGES - 1) {
-        setStats(addStatsForCompletedGame(stats, guesses.length + 1))
+      if (playState.guesses.length === MAX_CHALLENGES - 1) {
+        setStats(addStatsForCompletedGame(stats, playState.guesses.length + 1))
         setIsGameLost(true)
         showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
           persist: true,
@@ -356,6 +360,7 @@ function App() {
 
   const onEditMode = () => {
     setIsEditingModeActive(!isEditingModeActive)
+    setEditCell({ row: 0, column: 0 })
   }
 
   return (
@@ -369,13 +374,13 @@ function App() {
         <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow relative">
           <div className="pb-6 grow">
             <Grid
-              guesses={guesses}
+              guesses={playState.guesses}
               currentGuess={currentGuess}
               isRevealing={isRevealing}
               currentRowClassName={currentRowClass}
               editCell={editCell}
               isEditingMode={isEditingModeActive}
-              statuses={statuses}
+              statuses={playState.statuses}
               handleRemoveIconClick={handleRemoveIconClick}
             />
           </div>
@@ -386,9 +391,11 @@ function App() {
             onEditMode={onEditMode}
             handleEditMode={handleEditMode}
             handleArrowKey={handleArrowKey}
-            guesses={guesses}
+            onSpace={onEditMode}
+            guesses={playState.guesses}
             isRevealing={isRevealing}
             isEditingMode={isEditingModeActive}
+            statuses={playState.statuses}
           />
           <InfoModal
             isOpen={isInfoModalOpen}
@@ -397,7 +404,7 @@ function App() {
           <StatsModal
             isOpen={isStatsModalOpen}
             handleClose={() => setIsStatsModalOpen(false)}
-            guesses={guesses}
+            guesses={playState.guesses}
             gameStats={stats}
             isGameLost={isGameLost}
             isGameWon={isGameWon}
@@ -405,7 +412,7 @@ function App() {
             isHardMode={isHardMode}
             isDarkMode={isDarkMode}
             isHighContrastMode={isHighContrastMode}
-            numberOfGuessesMade={guesses.length}
+            numberOfGuessesMade={playState.guesses.length}
           />
           <SettingsModal
             isOpen={isSettingsModalOpen}
@@ -418,17 +425,15 @@ function App() {
             handleHighContrastMode={handleHighContrastMode}
           />
           <AlertContainer />
-          <div className="flex flex-col grow absolute right-0 top-0 w-2/12 max-w-none hover:cursor-pointer">
+          <div className="flex flex-col grow absolute right-0 top-0 w-2/12 max-w-none">
             <Results>
               {results.slice(0, 10).map((result, i) => (
                 <Result key={i} onClick={handleWordSelect}>
                   {result}
                 </Result>
               ))}
-              {results.length > 10 && <Result onClick={() => {}}>...</Result>}
-              {results.length === 0 && (
-                <Result onClick={() => {}}>No result.</Result>
-              )}
+              {results.length > 10 && <Result onClick={() => {}}>(...)</Result>}
+              {results.length === 0 && <Info>No result.</Info>}
             </Results>
           </div>
           <div className="flex flex-col grow absolute left-0 top-0">

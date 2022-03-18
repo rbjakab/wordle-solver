@@ -1,4 +1,4 @@
-import { CharStatus, getStatuses } from '../../lib/statuses'
+import { CharStatus, getLettersStatuses } from '../../lib/statuses'
 import { Key } from './Key'
 import { useEffect } from 'react'
 import {
@@ -20,9 +20,11 @@ type Props = {
   onEditMode: () => void
   handleEditMode: (editMode: CharStatus) => void
   handleArrowKey: (arrowKey: ArrowKeyType) => void
+  onSpace: () => void
   guesses: string[]
   isRevealing?: boolean
   isEditingMode: boolean
+  statuses: CharStatus[][]
 }
 
 export const Keyboard = ({
@@ -32,11 +34,13 @@ export const Keyboard = ({
   onEditMode,
   handleEditMode,
   handleArrowKey,
+  onSpace,
   guesses,
   isRevealing,
   isEditingMode,
+  statuses,
 }: Props) => {
-  const charStatuses = getStatuses(guesses)
+  const charStatuses = getLettersStatuses(guesses, statuses)
 
   const onClick = (value: string) => {
     if (value === 'ENTER') {
@@ -69,6 +73,10 @@ export const Keyboard = ({
           onChar(key)
         }
 
+        if (key === ' ') {
+          onSpace()
+        }
+
         if (
           isEditingMode &&
           ['ARROWUP', 'ARROWRIGHT', 'ARROWDOWN', 'ARROWLEFT'].includes(key)
@@ -81,7 +89,7 @@ export const Keyboard = ({
     return () => {
       window.removeEventListener('keyup', listener)
     }
-  }, [onEnter, onDelete, onChar, handleArrowKey, isEditingMode])
+  }, [onEnter, onDelete, onChar, handleArrowKey, isEditingMode, onSpace])
 
   return (
     <>
@@ -103,7 +111,7 @@ export const Keyboard = ({
                 value={key}
                 key={key}
                 onClick={onClick}
-                status={undefined}
+                status={charStatuses[key]}
                 isRevealing={isRevealing}
               />
             ))}
@@ -114,7 +122,7 @@ export const Keyboard = ({
                 value={key}
                 key={key}
                 onClick={onClick}
-                status={undefined}
+                status={charStatuses[key]}
                 isRevealing={isRevealing}
               />
             ))}
@@ -128,7 +136,7 @@ export const Keyboard = ({
                 value={key}
                 key={key}
                 onClick={onClick}
-                status={undefined}
+                status={charStatuses[key]}
                 isRevealing={isRevealing}
               />
             ))}
