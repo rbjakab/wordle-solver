@@ -77,7 +77,6 @@ function App() {
     getStoredIsHighContrastMode()
   )
   const [isRevealing, setIsRevealing] = useState(false)
-
   const [playState, setPlayState] = useState<{
     guesses: string[]
     statuses: CharStatus[][]
@@ -88,8 +87,8 @@ function App() {
 
     return { guesses: guessesValue, statuses: statusesValue }
   })
-
   const [stats, setStats] = useState(() => loadStats())
+  const [displayedResultsNumber, setDisplayedResultsNumber] = useState(5)
 
   const [isHardMode, setIsHardMode] = useState(
     localStorage.getItem('gameMode')
@@ -214,6 +213,10 @@ function App() {
   const handleHighContrastMode = (isHighContrast: boolean) => {
     setIsHighContrastMode(isHighContrast)
     setStoredIsHighContrastMode(isHighContrast)
+  }
+
+  const handleSeeMore = () => {
+    setDisplayedResultsNumber((prevNumber) => prevNumber + 5)
   }
 
   const clearCurrentRowClass = () => {
@@ -427,12 +430,14 @@ function App() {
           <AlertContainer />
           <div className="flex flex-col grow absolute right-0 top-0 w-2/12 max-w-none">
             <Results>
-              {results.slice(0, 10).map((result, i) => (
+              {results.slice(0, displayedResultsNumber).map((result, i) => (
                 <Result key={i} onClick={handleWordSelect}>
                   {result}
                 </Result>
               ))}
-              {results.length > 10 && <Result onClick={() => {}}>(...)</Result>}
+              {results.length > 10 && (
+                <Result onClick={handleSeeMore}>(...)</Result>
+              )}
               {results.length === 0 && <Info>No result.</Info>}
             </Results>
           </div>
