@@ -6,7 +6,7 @@ type Props = {
 
 export const Results = ({ children }: Props) => {
   return (
-    <div className="flex flex-col items-center mb-1 w-full max-w-none">
+    <div className="flex flex-row flex-wrap justify-center md:justify-end w-fit">
       {children}
     </div>
   )

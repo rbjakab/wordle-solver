@@ -374,7 +374,23 @@ function App() {
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
       <div className="">
-        <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow relative">
+        <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow md:relative">
+          <div className="w-full md:w-fit flex flex-col grow justify-center items-center md:absolute md:left-0 md:top-0">
+            <Info>Number of Results: {results.length}</Info>
+          </div>
+          <div className="flex flex-col justify-center items-center md:items-end grow w-full mb-4 md:mb-0 md:absolute md:right-0 md:top-0 md:w-2/12">
+            <Results>
+              {results.slice(0, displayedResultsNumber).map((result, i) => (
+                <Result key={i} onClick={handleWordSelect}>
+                  {result}
+                </Result>
+              ))}
+              {displayedResultsNumber < results.length && (
+                <Result onClick={handleSeeMore}>(...)</Result>
+              )}
+              {results.length === 0 && <Info>No result.</Info>}
+            </Results>
+          </div>
           <div className="pb-6 grow">
             <Grid
               guesses={playState.guesses}
@@ -428,22 +444,6 @@ function App() {
             handleHighContrastMode={handleHighContrastMode}
           />
           <AlertContainer />
-          <div className="flex flex-col grow absolute right-0 top-0 w-2/12 max-w-none">
-            <Results>
-              {results.slice(0, displayedResultsNumber).map((result, i) => (
-                <Result key={i} onClick={handleWordSelect}>
-                  {result}
-                </Result>
-              ))}
-              {results.length > 10 && (
-                <Result onClick={handleSeeMore}>(...)</Result>
-              )}
-              {results.length === 0 && <Info>No result.</Info>}
-            </Results>
-          </div>
-          <div className="flex flex-col grow absolute left-0 top-0">
-            <Info>Number of Results: {results.length}</Info>
-          </div>
         </div>
       </div>
     </div>
