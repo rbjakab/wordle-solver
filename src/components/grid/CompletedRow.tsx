@@ -20,7 +20,7 @@ export const CompletedRow = ({
   guessRow,
   onRemoveClick,
 }: Props) => {
-  const statuses = getGuessStatuses(guess)
+  // const statuses = getGuessStatuses(guess)
   const splitGuess = unicodeSplit(guess)
   const updatedStatusRow: CharStatus[] =
     statusRow ?? Array.from(Array(guess.length)).map((_) => 'absent')
@@ -28,11 +28,12 @@ export const CompletedRow = ({
   return (
     <>
       <div className="flex justify-center mb-1 w-fit relative">
-        <div
-          className="absolute -left-10 top-3.5 hover:cursor-pointer"
-          onClick={() => onRemoveClick(guessRow)}
-        >
-          <XCircleIcon width={25} className="hover:fill-red-500" />
+        <div className="w-14 h-14 flex items-center justify-center absolute -left-14">
+          <XCircleIcon
+            width={28}
+            className="hover:fill-red-500 hover:cursor-pointer"
+            onClick={() => onRemoveClick(guessRow)}
+          />
         </div>
         {splitGuess.map((letter, i) => (
           <Cell
