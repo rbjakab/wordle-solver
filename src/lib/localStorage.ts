@@ -1,5 +1,8 @@
+import { CharStatus } from './statuses'
+
 const gameStateKey = 'gameState'
 const highContrastKey = 'highContrast'
+const statusesKey = 'statuses'
 
 type StoredGameState = {
   guesses: string[]
@@ -8,6 +11,15 @@ type StoredGameState = {
 
 export const saveGameStateToLocalStorage = (gameState: StoredGameState) => {
   localStorage.setItem(gameStateKey, JSON.stringify(gameState))
+}
+
+export const saveStatusesToLocalStorage = (statuses: CharStatus[][]) => {
+  localStorage.setItem(statusesKey, JSON.stringify(statuses))
+}
+
+export const loadStatusesToLocalStorage = () => {
+  const state = localStorage.getItem(statusesKey)
+  return state ? (JSON.parse(state) as CharStatus[][]) : []
 }
 
 export const loadGameStateFromLocalStorage = () => {

@@ -9,6 +9,7 @@ type Props = {
   isRevealing?: boolean
   isCompleted?: boolean
   position?: number
+  editCell?: boolean
 }
 
 export const Cell = ({
@@ -17,6 +18,7 @@ export const Cell = ({
   isRevealing,
   isCompleted,
   position = 0,
+  editCell,
 }: Props) => {
   const isFilled = value && !isCompleted
   const shouldReveal = isRevealing && isCompleted
@@ -41,6 +43,7 @@ export const Cell = ({
         status === 'present' && !isHighContrast,
       'cell-fill-animation': isFilled,
       'cell-reveal': shouldReveal,
+      'cell-edit': editCell,
     }
   )
 

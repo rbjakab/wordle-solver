@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Grid } from './components/grid/Grid'
-import { Keyboard } from './components/keyboard/Keyboard'
+import { ArrowKeyType, Keyboard } from './components/keyboard/Keyboard'
 import { InfoModal } from './components/modals/InfoModal'
 import { StatsModal } from './components/modals/StatsModal'
 import { SettingsModal } from './components/modals/SettingsModal'
@@ -25,6 +25,8 @@ import {
   solution,
   findFirstUnusedReveal,
   unicodeLength,
+  unicodeSplit,
+  localeAwareUpperCase,
 } from './lib/words'
 import { addStatsForCompletedGame, loadStats } from './lib/stats'
 import {
@@ -32,6 +34,8 @@ import {
   saveGameStateToLocalStorage,
   setStoredIsHighContrastMode,
   getStoredIsHighContrastMode,
+  saveStatusesToLocalStorage,
+  loadStatusesToLocalStorage,
 } from './lib/localStorage'
 import { default as GraphemeSplitter } from 'grapheme-splitter'
 
@@ -39,6 +43,11 @@ import './App.css'
 import { AlertContainer } from './components/alerts/AlertContainer'
 import { useAlert } from './context/AlertContext'
 import { Navbar } from './components/navbar/Navbar'
+import { CharStatus } from './lib/statuses'
+import { calculateResults } from './lib/results'
+import { Results } from './components/results/Results'
+import { Result } from './components/results/Result'
+import { Info } from './components/results/Info'
 
 function App() {
   const prefersDarkMode = window.matchMedia(
@@ -48,6 +57,9 @@ function App() {
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
   const [currentGuess, setCurrentGuess] = useState('')
+  const [isEditingModeActive, setIsEditingModeActive] = useState(false)
+  const [editCell, setEditCell] = useState({ row: 0, column: 0 })
+  const [results, setResults] = useState<string[]>([])
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
@@ -81,6 +93,20 @@ function App() {
       })
     }
     return loaded.guesses
+  })
+  const [statuses, setStatuses] = useState<CharStatus[][]>(() => {
+    const load = loadStatusesToLocalStorage()
+
+    if (
+      guesses === undefined ||
+      guesses.length === 0 ||
+      load === undefined ||
+      load.length === 0
+    ) {
+      return []
+    }
+
+    return load
   })
 
   const [stats, setStats] = useState(() => loadStats())
@@ -129,6 +155,65 @@ function App() {
     }
   }
 
+  const handleEditMode = (editMode: CharStatus) => {
+    const newStatuses = JSON.parse(JSON.stringify(statuses))
+    newStatuses[editCell.row][editCell.column] = editMode
+    setStatuses(newStatuses)
+    const newEditCellColumn =
+      editCell.row === guesses.length - 1 &&
+      editCell.column === MAX_WORD_LENGTH - 1
+        ? editCell.column
+        : editCell.column === MAX_WORD_LENGTH - 1
+        ? 0
+        : editCell.column + 1
+    const newEditCellRow =
+      editCell.row === guesses.length - 1 &&
+      editCell.column === MAX_WORD_LENGTH - 1
+        ? editCell.row
+        : editCell.column === MAX_WORD_LENGTH - 1
+        ? editCell.row + 1
+        : editCell.row
+    setEditCell({ row: newEditCellRow, column: newEditCellColumn })
+  }
+
+  const handleArrowKey = (arrowKey: ArrowKeyType) => {
+    const newEditCell = { row: editCell.row, column: editCell.column }
+
+    if (arrowKey === 'ARROWUP' && editCell.row !== 0) {
+      newEditCell.row = newEditCell.row - 1
+    }
+
+    if (arrowKey === 'ARROWRIGHT' && editCell.column !== MAX_WORD_LENGTH - 1) {
+      newEditCell.column = newEditCell.column + 1
+    }
+
+    if (arrowKey === 'ARROWDOWN' && editCell.row !== guesses.length - 1) {
+      newEditCell.row = newEditCell.row + 1
+    }
+
+    if (arrowKey === 'ARROWLEFT' && editCell.column !== 0) {
+      newEditCell.column = newEditCell.column - 1
+    }
+
+    setEditCell(newEditCell)
+  }
+
+  const handleRemoveIconClick = (guessRow: number) => {
+    setGuesses(guesses.filter((_, i) => i !== guessRow))
+    setStatuses(statuses.filter((_, i) => i !== guessRow))
+  }
+
+  const handleWordSelect = (word: string) => {
+    if (guesses.length === MAX_CHALLENGES - 1) return
+
+    setGuesses([...guesses, localeAwareUpperCase(word)])
+    const newStatusValue: CharStatus[][] = [
+      ...statuses,
+      unicodeSplit(word).map((_) => 'absent'),
+    ]
+    setStatuses(newStatusValue)
+  }
+
   const handleHighContrastMode = (isHighContrast: boolean) => {
     setIsHighContrastMode(isHighContrast)
     setStoredIsHighContrastMode(isHighContrast)
@@ -141,6 +226,14 @@ function App() {
   useEffect(() => {
     saveGameStateToLocalStorage({ guesses, solution })
   }, [guesses])
+
+  useEffect(() => {
+    saveStatusesToLocalStorage(statuses)
+  }, [statuses])
+
+  useEffect(() => {
+    setResults(calculateResults(statuses, guesses))
+  }, [guesses, statuses])
 
   useEffect(() => {
     if (isGameWon) {
@@ -162,6 +255,22 @@ function App() {
   }, [isGameWon, isGameLost, showSuccessAlert])
 
   const onChar = (value: string) => {
+    if (isEditingModeActive) {
+      if (value === 'A') {
+        handleEditMode('absent')
+      }
+
+      if (value === 'P') {
+        handleEditMode('present')
+      }
+
+      if (value === 'C') {
+        handleEditMode('correct')
+      }
+
+      return
+    }
+
     if (
       unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH &&
       guesses.length < MAX_CHALLENGES &&
@@ -182,7 +291,7 @@ function App() {
       return
     }
 
-    if (!(unicodeLength(currentGuess) === MAX_WORD_LENGTH)) {
+    if (unicodeLength(currentGuess) !== MAX_WORD_LENGTH) {
       setCurrentRowClass('jiggle')
       return showErrorAlert(NOT_ENOUGH_LETTERS_MESSAGE, {
         onClose: clearCurrentRowClass,
@@ -222,6 +331,11 @@ function App() {
       !isGameWon
     ) {
       setGuesses([...guesses, currentGuess])
+      const newStatusValue: CharStatus[][] = [
+        ...statuses,
+        unicodeSplit(currentGuess).map((_) => 'absent'),
+      ]
+      setStatuses(newStatusValue)
       setCurrentGuess('')
 
       if (winningWord) {
@@ -240,6 +354,10 @@ function App() {
     }
   }
 
+  const onEditMode = () => {
+    setIsEditingModeActive(!isEditingModeActive)
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <Navbar
@@ -247,50 +365,76 @@ function App() {
         setIsStatsModalOpen={setIsStatsModalOpen}
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
-      <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
-        <div className="pb-6 grow">
-          <Grid
+      <div className="">
+        <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow relative">
+          <div className="pb-6 grow">
+            <Grid
+              guesses={guesses}
+              currentGuess={currentGuess}
+              isRevealing={isRevealing}
+              currentRowClassName={currentRowClass}
+              editCell={editCell}
+              isEditingMode={isEditingModeActive}
+              statuses={statuses}
+              handleRemoveIconClick={handleRemoveIconClick}
+            />
+          </div>
+          <Keyboard
+            onChar={onChar}
+            onDelete={onDelete}
+            onEnter={onEnter}
+            onEditMode={onEditMode}
+            handleEditMode={handleEditMode}
+            handleArrowKey={handleArrowKey}
             guesses={guesses}
-            currentGuess={currentGuess}
             isRevealing={isRevealing}
-            currentRowClassName={currentRowClass}
+            isEditingMode={isEditingModeActive}
           />
+          <InfoModal
+            isOpen={isInfoModalOpen}
+            handleClose={() => setIsInfoModalOpen(false)}
+          />
+          <StatsModal
+            isOpen={isStatsModalOpen}
+            handleClose={() => setIsStatsModalOpen(false)}
+            guesses={guesses}
+            gameStats={stats}
+            isGameLost={isGameLost}
+            isGameWon={isGameWon}
+            handleShareToClipboard={() => showSuccessAlert(GAME_COPIED_MESSAGE)}
+            isHardMode={isHardMode}
+            isDarkMode={isDarkMode}
+            isHighContrastMode={isHighContrastMode}
+            numberOfGuessesMade={guesses.length}
+          />
+          <SettingsModal
+            isOpen={isSettingsModalOpen}
+            handleClose={() => setIsSettingsModalOpen(false)}
+            isHardMode={isHardMode}
+            handleHardMode={handleHardMode}
+            isDarkMode={isDarkMode}
+            handleDarkMode={handleDarkMode}
+            isHighContrastMode={isHighContrastMode}
+            handleHighContrastMode={handleHighContrastMode}
+          />
+          <AlertContainer />
+          <div className="flex flex-col grow absolute right-0 top-0 w-2/12 max-w-none hover:cursor-pointer">
+            <Results>
+              {results.slice(0, 10).map((result, i) => (
+                <Result key={i} onClick={handleWordSelect}>
+                  {result}
+                </Result>
+              ))}
+              {results.length > 10 && <Result onClick={() => {}}>...</Result>}
+              {results.length === 0 && (
+                <Result onClick={() => {}}>No result.</Result>
+              )}
+            </Results>
+          </div>
+          <div className="flex flex-col grow absolute left-0 top-0">
+            <Info>Number of Results: {results.length}</Info>
+          </div>
         </div>
-        <Keyboard
-          onChar={onChar}
-          onDelete={onDelete}
-          onEnter={onEnter}
-          guesses={guesses}
-          isRevealing={isRevealing}
-        />
-        <InfoModal
-          isOpen={isInfoModalOpen}
-          handleClose={() => setIsInfoModalOpen(false)}
-        />
-        <StatsModal
-          isOpen={isStatsModalOpen}
-          handleClose={() => setIsStatsModalOpen(false)}
-          guesses={guesses}
-          gameStats={stats}
-          isGameLost={isGameLost}
-          isGameWon={isGameWon}
-          handleShareToClipboard={() => showSuccessAlert(GAME_COPIED_MESSAGE)}
-          isHardMode={isHardMode}
-          isDarkMode={isDarkMode}
-          isHighContrastMode={isHighContrastMode}
-          numberOfGuessesMade={guesses.length}
-        />
-        <SettingsModal
-          isOpen={isSettingsModalOpen}
-          handleClose={() => setIsSettingsModalOpen(false)}
-          isHardMode={isHardMode}
-          handleHardMode={handleHardMode}
-          isDarkMode={isDarkMode}
-          handleDarkMode={handleDarkMode}
-          isHighContrastMode={isHighContrastMode}
-          handleHighContrastMode={handleHighContrastMode}
-        />
-        <AlertContainer />
       </div>
     </div>
   )

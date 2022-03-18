@@ -10,7 +10,7 @@ type Props = {
 export const CurrentRow = ({ guess, className }: Props) => {
   const splitGuess = unicodeSplit(guess)
   const emptyCells = Array.from(Array(MAX_WORD_LENGTH - splitGuess.length))
-  const classes = `flex justify-center mb-1 ${className}`
+  const classes = `flex justify-center mb-1 ${className} w-fit`
 
   return (
     <div className={classes}>

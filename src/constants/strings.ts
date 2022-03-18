@@ -17,6 +17,10 @@ export const NOT_CONTAINED_MESSAGE = (letter: string) =>
   `Guess must contain ${letter}`
 export const ENTER_TEXT = 'Enter'
 export const DELETE_TEXT = 'Delete'
+export const EDIT_MODE_TEXT = 'Edit Mode'
+export const ABSENT_TEXT = 'Absent'
+export const PRESENT_TEXT = 'Present'
+export const CORRECT_TEXT = 'Correct'
 export const STATISTICS_TITLE = 'Statistics'
 export const GUESS_DISTRIBUTION_TEXT = 'Guess Distribution'
 export const NEW_WORD_TEXT = 'New word in'

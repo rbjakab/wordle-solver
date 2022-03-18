@@ -1,4 +1,5 @@
 import { MAX_CHALLENGES } from '../../constants/settings'
+import { CharStatus } from '../../lib/statuses'
 import { CompletedRow } from './CompletedRow'
 import { CurrentRow } from './CurrentRow'
 import { EmptyRow } from './EmptyRow'
@@ -8,6 +9,10 @@ type Props = {
   currentGuess: string
   isRevealing?: boolean
   currentRowClassName: string
+  editCell: { row: number; column: number }
+  isEditingMode: boolean
+  statuses: CharStatus[][]
+  handleRemoveIconClick: (guessRow: number) => void
 }
 
 export const Grid = ({
@@ -15,6 +20,10 @@ export const Grid = ({
   currentGuess,
   isRevealing,
   currentRowClassName,
+  editCell,
+  isEditingMode,
+  statuses,
+  handleRemoveIconClick,
 }: Props) => {
   const empties =
     guesses.length < MAX_CHALLENGES - 1
@@ -22,12 +31,18 @@ export const Grid = ({
       : []
 
   return (
-    <>
+    <div className="flex items-center mb-1 flex-col">
       {guesses.map((guess, i) => (
         <CompletedRow
           key={i}
           guess={guess}
           isRevealing={isRevealing && guesses.length - 1 === i}
+          editCell={
+            i === editCell.row && isEditingMode ? editCell.column : undefined
+          }
+          statusRow={statuses[i]}
+          guessRow={i}
+          onRemoveClick={handleRemoveIconClick}
         />
       ))}
       {guesses.length < MAX_CHALLENGES && (
@@ -36,6 +51,6 @@ export const Grid = ({
       {empties.map((_, i) => (
         <EmptyRow key={i} />
       ))}
-    </>
+    </div>
   )
 }
