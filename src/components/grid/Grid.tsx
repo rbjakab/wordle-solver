@@ -1,3 +1,4 @@
+import { EditCellType } from '../../App'
 import { MAX_CHALLENGES } from '../../constants/settings'
 import { CharStatus } from '../../lib/statuses'
 import { CompletedRow } from './CompletedRow'
@@ -13,6 +14,7 @@ type Props = {
   isEditingMode: boolean
   statuses: CharStatus[][]
   handleRemoveIconClick: (guessRow: number) => void
+  handleLetterClick: (editCell: EditCellType) => void
 }
 
 export const Grid = ({
@@ -24,6 +26,7 @@ export const Grid = ({
   isEditingMode,
   statuses,
   handleRemoveIconClick,
+  handleLetterClick,
 }: Props) => {
   const empties =
     guesses.length < MAX_CHALLENGES - 1
@@ -43,6 +46,7 @@ export const Grid = ({
           statusRow={statuses[i]}
           guessRow={i}
           onRemoveClick={handleRemoveIconClick}
+          handleLetterClick={handleLetterClick}
         />
       ))}
       {guesses.length < MAX_CHALLENGES && (

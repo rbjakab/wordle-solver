@@ -2,6 +2,7 @@ import { CharStatus } from '../../lib/statuses'
 import { Cell } from './Cell'
 import { unicodeSplit } from '../../lib/words'
 import { XCircleIcon } from '@heroicons/react/outline'
+import { EditCellType } from '../../App'
 
 type Props = {
   guess: string
@@ -10,6 +11,7 @@ type Props = {
   statusRow: CharStatus[]
   guessRow: number
   onRemoveClick: (guessRow: number) => void
+  handleLetterClick: (editCell: EditCellType) => void
 }
 
 export const CompletedRow = ({
@@ -19,6 +21,7 @@ export const CompletedRow = ({
   statusRow,
   guessRow,
   onRemoveClick,
+  handleLetterClick,
 }: Props) => {
   // const statuses = getGuessStatuses(guess)
   const splitGuess = unicodeSplit(guess)
@@ -44,6 +47,8 @@ export const CompletedRow = ({
             isRevealing={isRevealing}
             isCompleted
             editCell={i === editCell}
+            editCellPosition={{ row: guessRow, column: i }}
+            handleLetterClick={handleLetterClick}
           />
         ))}
       </div>

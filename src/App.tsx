@@ -49,6 +49,11 @@ import { Results } from './components/results/Results'
 import { Result } from './components/results/Result'
 import { Info } from './components/results/Info'
 
+export type EditCellType = {
+  row: number
+  column: number
+}
+
 function App() {
   const prefersDarkMode = window.matchMedia(
     '(prefers-color-scheme: dark)'
@@ -58,7 +63,7 @@ function App() {
     useAlert()
   const [currentGuess, setCurrentGuess] = useState('')
   const [isEditingModeActive, setIsEditingModeActive] = useState(false)
-  const [editCell, setEditCell] = useState({ row: 0, column: 0 })
+  const [editCell, setEditCell] = useState<EditCellType>({ row: 0, column: 0 })
   const [results, setResults] = useState<string[]>([])
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
@@ -217,6 +222,10 @@ function App() {
 
   const handleSeeMore = () => {
     setDisplayedResultsNumber((prevNumber) => prevNumber + 5)
+  }
+
+  const handleLetterClick = (newEditCell: EditCellType) => {
+    setEditCell(newEditCell)
   }
 
   const clearCurrentRowClass = () => {
@@ -401,6 +410,7 @@ function App() {
               isEditingMode={isEditingModeActive}
               statuses={playState.statuses}
               handleRemoveIconClick={handleRemoveIconClick}
+              handleLetterClick={handleLetterClick}
             />
           </div>
           <Keyboard

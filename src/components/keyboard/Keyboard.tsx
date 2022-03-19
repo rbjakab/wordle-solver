@@ -64,9 +64,9 @@ export const Keyboard = ({
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (e.code === 'Enter') {
+      if (e.code === 'Enter' && !isEditingMode) {
         onEnter()
-      } else if (e.code === 'Backspace') {
+      } else if (e.code === 'Backspace' && !isEditingMode) {
         onDelete()
       } else {
         const key = localeAwareUpperCase(e.key)

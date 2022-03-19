@@ -2,6 +2,7 @@ import { CharStatus } from '../../lib/statuses'
 import classnames from 'classnames'
 import { REVEAL_TIME_MS } from '../../constants/settings'
 import { getStoredIsHighContrastMode } from '../../lib/localStorage'
+import { EditCellType } from '../../App'
 
 type Props = {
   value?: string
@@ -10,6 +11,8 @@ type Props = {
   isCompleted?: boolean
   position?: number
   editCell?: boolean
+  handleLetterClick?: (editCell: EditCellType) => void
+  editCellPosition?: EditCellType
 }
 
 export const Cell = ({
@@ -19,11 +22,19 @@ export const Cell = ({
   isCompleted,
   position = 0,
   editCell,
+  handleLetterClick,
+  editCellPosition,
 }: Props) => {
   const isFilled = value && !isCompleted
   const shouldReveal = isRevealing && isCompleted
   const animationDelay = `${position * REVEAL_TIME_MS}ms`
   const isHighContrast = getStoredIsHighContrastMode()
+
+  const handleOnClick = () => {
+    if (!!handleLetterClick && !!editCellPosition) {
+      handleLetterClick(editCellPosition)
+    }
+  }
 
   const classes = classnames(
     'w-14 h-14 border-solid border-2 flex items-center justify-center mx-0.5 text-4xl font-bold rounded dark:text-white',
@@ -44,11 +55,12 @@ export const Cell = ({
       'cell-fill-animation': isFilled,
       'cell-reveal': shouldReveal,
       'cell-edit': editCell,
+      'cursor-pointer': !!editCellPosition,
     }
   )
 
   return (
-    <div className={classes} style={{ animationDelay }}>
+    <div className={classes} style={{ animationDelay }} onClick={handleOnClick}>
       <div className="letter-container" style={{ animationDelay }}>
         {value}
       </div>
