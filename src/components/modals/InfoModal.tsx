@@ -1,4 +1,3 @@
-import { Cell } from '../grid/Cell'
 import { BaseModal } from './BaseModal'
 
 type Props = {
@@ -8,64 +7,67 @@ type Props = {
 
 export const InfoModal = ({ isOpen, handleClose }: Props) => {
   return (
-    <BaseModal title="How to play" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal title="How to use" isOpen={isOpen} handleClose={handleClose}>
       <p className="text-sm text-gray-500 dark:text-gray-300">
-        Guess the word in 6 tries. After each guess, the color of the tiles will
-        change to show how close your guess was to the word.
+        Write in the received words from Wordle with the revealed letters. Use
+        one of the recommended words (by typing or clicking).
       </p>
 
-      <div className="flex justify-center mb-1 mt-4">
-        <Cell
-          isRevealing={true}
-          isCompleted={true}
-          value="W"
-          status="correct"
-        />
-        <Cell value="E" />
-        <Cell value="A" />
-        <Cell value="R" />
-        <Cell value="Y" />
-      </div>
+      <p className="text-lg mt-6 text-gray-900 dark:text-gray-300">
+        Edit Mode:
+      </p>
       <p className="text-sm text-gray-500 dark:text-gray-300">
-        The letter W is in the word and in the correct spot.
+        You can set the letters' statuses in the edit mode. Use the arrows to
+        navigate or click on the letter.
       </p>
 
-      <div className="flex justify-center mb-1 mt-4">
-        <Cell value="P" />
-        <Cell value="I" />
-        <Cell
-          isRevealing={true}
-          isCompleted={true}
-          value="L"
-          status="present"
-        />
-        <Cell value="O" />
-        <Cell value="T" />
-      </div>
+      <p className="text-lg mt-6 text-gray-900 dark:text-gray-300">
+        Shortcuts:
+      </p>
       <p className="text-sm text-gray-500 dark:text-gray-300">
-        The letter L is in the word but in the wrong spot.
+        <span className="text-base text-gray-900 dark:text-gray-300">
+          Space:
+        </span>{' '}
+        Edit Mode On / Off
+      </p>
+      <p className="text-sm text-gray-500 dark:text-gray-300">
+        <span className="text-base text-gray-900 dark:text-gray-300">
+          Edit Mode On + A:
+        </span>{' '}
+        Make letter Absent
+      </p>
+      <p className="text-sm text-gray-500 dark:text-gray-300">
+        <span className="text-base text-gray-900 dark:text-gray-300">
+          Edit Mode On + P:
+        </span>{' '}
+        Make letter Present
+      </p>
+      <p className="text-sm text-gray-500 dark:text-gray-300">
+        <span className="text-base text-gray-900 dark:text-gray-300">
+          Edit Mode On + C:
+        </span>{' '}
+        Make letter Correct
       </p>
 
-      <div className="flex justify-center mb-1 mt-4">
-        <Cell value="V" />
-        <Cell value="A" />
-        <Cell value="G" />
-        <Cell isRevealing={true} isCompleted={true} value="U" status="absent" />
-        <Cell value="E" />
-      </div>
-      <p className="text-sm text-gray-500 dark:text-gray-300">
-        The letter U is not in the word in any spot.
-      </p>
-
-      <p className="mt-6 italic text-sm text-gray-500 dark:text-gray-300">
+      <p className="italic text-sm mt-6 text-gray-500 dark:text-gray-300">
         This is an open source version of the word guessing game we all know and
-        love -{' '}
+        love.
+      </p>
+      <p>
+        <a
+          href="https://github.com/rbjakab/wordle-solver"
+          className="italic text-sm mt-6 text-gray-500 dark:text-gray-300 underline font-bold"
+        >
+          check out this project's code here
+        </a>
+      </p>
+      <p>
         <a
           href="https://github.com/cwackerfuss/react-wordle"
-          className="underline font-bold"
+          className="italic text-sm mt-6 text-gray-500 dark:text-gray-300 underline font-bold"
         >
-          check out the code here
-        </a>{' '}
+          check out the original code here
+        </a>
       </p>
     </BaseModal>
   )

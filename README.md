@@ -21,8 +21,8 @@ $> npm run start
 #### Development
 
 ```bash
-$> docker build -t reactle:dev -f docker/Dockerfile .
-$> docker run -d -p 3000:3000 --name reactle-dev reactle:dev
+$> docker build -t wordle-solver:dev -f docker/Dockerfile .
+$> docker run -d -p 3000:3000 --name wordle-solver-dev wordle-solver:dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in browser.
@@ -30,8 +30,8 @@ Open [http://localhost:3000](http://localhost:3000) in browser.
 #### Production
 
 ```bash
-$> docker build --target=prod -t reactle:prod -f docker/Dockerfile .
-$> docker run -d -p 80:8080  --name reactle-prod reactle:prod
+$> docker build --target=prod -t wordle-solver:prod -f docker/Dockerfile .
+$> docker run -d -p 80:8080  --name wordle-solver-prod wordle-solver:prod
 ```
 
 Open [http://localhost](http://localhost) in browser.
