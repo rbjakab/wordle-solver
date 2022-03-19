@@ -34,7 +34,7 @@ export const CompletedRow = ({
         <div className="w-14 h-14 flex items-center justify-center absolute -left-14">
           <XCircleIcon
             width={28}
-            className="hover:fill-red-500 hover:cursor-pointer"
+            className="hover:fill-red-500 hover:cursor-pointer dark:stroke-white"
             onClick={() => onRemoveClick(guessRow)}
           />
         </div>

@@ -54,7 +54,7 @@ export const Cell = ({
         status === 'present' && !isHighContrast,
       'cell-fill-animation': isFilled,
       'cell-reveal': shouldReveal,
-      'cell-edit': editCell,
+      'border-[#000000] dark:border-white': editCell,
       'cursor-pointer': !!editCellPosition,
     }
   )
