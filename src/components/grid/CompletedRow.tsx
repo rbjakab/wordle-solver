@@ -23,7 +23,6 @@ export const CompletedRow = ({
   onRemoveClick,
   handleLetterClick,
 }: Props) => {
-  // const statuses = getGuessStatuses(guess)
   const splitGuess = unicodeSplit(guess)
   const updatedStatusRow: CharStatus[] =
     statusRow ?? Array.from(Array(guess.length)).map((_) => 'absent')

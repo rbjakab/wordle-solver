@@ -74,7 +74,7 @@ svg.cursor-pointer:hover {
   display: flex;
   height: 3rem;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .right-icons {

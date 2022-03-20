@@ -94,12 +94,7 @@ export const Keyboard = ({
   return (
     <>
       <div className="flex justify-center mb-1">
-        <Key
-          width={85}
-          value="EDIT_MODE"
-          onClick={onClick}
-          isActive={isEditingMode}
-        >
+        <Key width={85} value="EDIT_MODE" onClick={onClick}>
           {EDIT_MODE_TEXT}
         </Key>
       </div>

@@ -2,33 +2,23 @@ import { useState, useEffect } from 'react'
 import { Grid } from './components/grid/Grid'
 import { ArrowKeyType, Keyboard } from './components/keyboard/Keyboard'
 import { InfoModal } from './components/modals/InfoModal'
-import { StatsModal } from './components/modals/StatsModal'
 import { SettingsModal } from './components/modals/SettingsModal'
 import {
-  WIN_MESSAGES,
-  GAME_COPIED_MESSAGE,
   NOT_ENOUGH_LETTERS_MESSAGE,
   WORD_NOT_FOUND_MESSAGE,
-  CORRECT_WORD_MESSAGE,
-  HARD_MODE_ALERT_MESSAGE,
 } from './constants/strings'
 import {
   MAX_WORD_LENGTH,
   MAX_CHALLENGES,
   REVEAL_TIME_MS,
-  GAME_LOST_INFO_DELAY,
   WELCOME_INFO_MODAL_MS,
 } from './constants/settings'
 import {
   isWordInWordList,
-  isWinningWord,
-  solution,
-  findFirstUnusedReveal,
   unicodeLength,
   unicodeSplit,
   localeAwareUpperCase,
 } from './lib/words'
-import { addStatsForCompletedGame, loadStats } from './lib/stats'
 import {
   loadGameStateFromLocalStorage,
   saveGameStateToLocalStorage,
@@ -59,18 +49,14 @@ function App() {
     '(prefers-color-scheme: dark)'
   ).matches
 
-  const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
-    useAlert()
+  const { showError: showErrorAlert } = useAlert()
   const [currentGuess, setCurrentGuess] = useState('')
   const [isEditingModeActive, setIsEditingModeActive] = useState(false)
   const [editCell, setEditCell] = useState<EditCellType>({ row: 0, column: 0 })
   const [results, setResults] = useState<string[]>([])
-  const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const [currentRowClass, setCurrentRowClass] = useState('')
-  const [isGameLost, setIsGameLost] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem('theme')
       ? localStorage.getItem('theme') === 'dark'
@@ -92,14 +78,7 @@ function App() {
 
     return { guesses: guessesValue, statuses: statusesValue }
   })
-  const [stats, setStats] = useState(() => loadStats())
   const [displayedResultsNumber, setDisplayedResultsNumber] = useState(5)
-
-  const [isHardMode, setIsHardMode] = useState(
-    localStorage.getItem('gameMode')
-      ? localStorage.getItem('gameMode') === 'hard'
-      : false
-  )
 
   useEffect(() => {
     // if no game state on load,
@@ -130,18 +109,6 @@ function App() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light')
   }
 
-  const handleHardMode = (isHard: boolean) => {
-    if (
-      playState.guesses.length === 0 ||
-      localStorage.getItem('gameMode') === 'hard'
-    ) {
-      setIsHardMode(isHard)
-      localStorage.setItem('gameMode', isHard ? 'hard' : 'normal')
-    } else {
-      showErrorAlert(HARD_MODE_ALERT_MESSAGE)
-    }
-  }
-
   const handleEditMode = (editMode: CharStatus) => {
     const newStatuses = JSON.parse(JSON.stringify(playState.statuses))
 
@@ -156,6 +123,7 @@ function App() {
         : editCell.column === MAX_WORD_LENGTH - 1
         ? 0
         : editCell.column + 1
+
     const newEditCellRow =
       editCell.row === playState.guesses.length - 1 &&
       editCell.column === MAX_WORD_LENGTH - 1
@@ -233,7 +201,7 @@ function App() {
   }
 
   useEffect(() => {
-    saveGameStateToLocalStorage({ guesses: playState.guesses, solution })
+    saveGameStateToLocalStorage({ guesses: playState.guesses })
   }, [playState.guesses])
 
   useEffect(() => {
@@ -243,25 +211,6 @@ function App() {
   useEffect(() => {
     setResults(calculateResults(playState.statuses, playState.guesses))
   }, [playState.guesses, playState.statuses])
-
-  useEffect(() => {
-    if (isGameWon) {
-      const winMessage =
-        WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)]
-      const delayMs = REVEAL_TIME_MS * MAX_WORD_LENGTH
-
-      showSuccessAlert(winMessage, {
-        delayMs,
-        onClose: () => setIsStatsModalOpen(true),
-      })
-    }
-
-    if (isGameLost) {
-      setTimeout(() => {
-        setIsStatsModalOpen(true)
-      }, GAME_LOST_INFO_DELAY)
-    }
-  }, [isGameWon, isGameLost, showSuccessAlert])
 
   const onChar = (value: string) => {
     if (isEditingModeActive) {
@@ -282,8 +231,7 @@ function App() {
 
     if (
       unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH &&
-      playState.guesses.length < MAX_CHALLENGES &&
-      !isGameWon
+      playState.guesses.length < MAX_CHALLENGES
     ) {
       setCurrentGuess(`${currentGuess}${value}`)
     }
@@ -296,10 +244,6 @@ function App() {
   }
 
   const onEnter = () => {
-    if (isGameWon || isGameLost) {
-      return
-    }
-
     if (unicodeLength(currentGuess) !== MAX_WORD_LENGTH) {
       setCurrentRowClass('jiggle')
       return showErrorAlert(NOT_ENOUGH_LETTERS_MESSAGE, {
@@ -314,20 +258,6 @@ function App() {
       })
     }
 
-    // enforce hard mode - all guesses must contain all previously revealed letters
-    if (isHardMode) {
-      const firstMissingReveal = findFirstUnusedReveal(
-        currentGuess,
-        playState.guesses
-      )
-      if (firstMissingReveal) {
-        setCurrentRowClass('jiggle')
-        return showErrorAlert(firstMissingReveal, {
-          onClose: clearCurrentRowClass,
-        })
-      }
-    }
-
     setIsRevealing(true)
     // turn this back off after all
     // chars have been revealed
@@ -335,12 +265,9 @@ function App() {
       setIsRevealing(false)
     }, REVEAL_TIME_MS * MAX_WORD_LENGTH)
 
-    const winningWord = isWinningWord(currentGuess)
-
     if (
       unicodeLength(currentGuess) === MAX_WORD_LENGTH &&
-      playState.guesses.length < MAX_CHALLENGES &&
-      !isGameWon
+      playState.guesses.length < MAX_CHALLENGES
     ) {
       const newStatusValue: CharStatus[][] = [
         ...playState.statuses,
@@ -353,20 +280,6 @@ function App() {
         }
       })
       setCurrentGuess('')
-
-      if (winningWord) {
-        setStats(addStatsForCompletedGame(stats, playState.guesses.length))
-        return setIsGameWon(true)
-      }
-
-      if (playState.guesses.length === MAX_CHALLENGES - 1) {
-        setStats(addStatsForCompletedGame(stats, playState.guesses.length + 1))
-        setIsGameLost(true)
-        showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
-          persist: true,
-          delayMs: REVEAL_TIME_MS * MAX_WORD_LENGTH + 1,
-        })
-      }
     }
   }
 
@@ -379,7 +292,6 @@ function App() {
     <div className="h-screen flex flex-col">
       <Navbar
         setIsInfoModalOpen={setIsInfoModalOpen}
-        setIsStatsModalOpen={setIsStatsModalOpen}
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
       <div className="">
@@ -430,24 +342,9 @@ function App() {
             isOpen={isInfoModalOpen}
             handleClose={() => setIsInfoModalOpen(false)}
           />
-          <StatsModal
-            isOpen={isStatsModalOpen}
-            handleClose={() => setIsStatsModalOpen(false)}
-            guesses={playState.guesses}
-            gameStats={stats}
-            isGameLost={isGameLost}
-            isGameWon={isGameWon}
-            handleShareToClipboard={() => showSuccessAlert(GAME_COPIED_MESSAGE)}
-            isHardMode={isHardMode}
-            isDarkMode={isDarkMode}
-            isHighContrastMode={isHighContrastMode}
-            numberOfGuessesMade={playState.guesses.length}
-          />
           <SettingsModal
             isOpen={isSettingsModalOpen}
             handleClose={() => setIsSettingsModalOpen(false)}
-            isHardMode={isHardMode}
-            handleHardMode={handleHardMode}
             isDarkMode={isDarkMode}
             handleDarkMode={handleDarkMode}
             isHighContrastMode={isHighContrastMode}

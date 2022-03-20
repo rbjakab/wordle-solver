@@ -6,7 +6,6 @@ const statusesKey = 'statuses'
 
 type StoredGameState = {
   guesses: string[]
-  solution: string
 }
 
 export const saveGameStateToLocalStorage = (gameState: StoredGameState) => {
@@ -27,8 +26,6 @@ export const loadGameStateFromLocalStorage = () => {
   return state ? (JSON.parse(state) as StoredGameState) : null
 }
 
-const gameStatKey = 'gameStats'
-
 export type GameStats = {
   winDistribution: number[]
   gamesFailed: number
@@ -36,15 +33,6 @@ export type GameStats = {
   bestStreak: number
   totalGames: number
   successRate: number
-}
-
-export const saveStatsToLocalStorage = (gameStats: GameStats) => {
-  localStorage.setItem(gameStatKey, JSON.stringify(gameStats))
-}
-
-export const loadStatsFromLocalStorage = () => {
-  const stats = localStorage.getItem(gameStatKey)
-  return stats ? (JSON.parse(stats) as GameStats) : null
 }
 
 export const setStoredIsHighContrastMode = (isHighContrast: boolean) => {
