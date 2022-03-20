@@ -351,6 +351,17 @@ function App() {
             handleHighContrastMode={handleHighContrastMode}
           />
           <AlertContainer />
+          <p className="mt-6 flex justify-center">
+            Made by&nbsp;
+            <a
+              href="https://rjakab.vercel.app/"
+              className="text-blue-500"
+              target={'_blank'}
+              rel="noreferrer"
+            >
+              Richard Jakab
+            </a>
+          </p>
         </div>
       </div>
     </div>
