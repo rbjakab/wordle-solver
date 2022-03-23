@@ -34,7 +34,7 @@ import { AlertContainer } from './components/alerts/AlertContainer'
 import { useAlert } from './context/AlertContext'
 import { Navbar } from './components/navbar/Navbar'
 import { CharStatus } from './lib/statuses'
-import { calculateResults } from './lib/results'
+import { getWordRecommendations } from './lib/results'
 import { Results } from './components/results/Results'
 import { Result } from './components/results/Result'
 import { Info } from './components/results/Info'
@@ -209,7 +209,7 @@ function App() {
   }, [playState.statuses])
 
   useEffect(() => {
-    setResults(calculateResults(playState.statuses, playState.guesses))
+    setResults(getWordRecommendations(playState.statuses, playState.guesses))
   }, [playState.guesses, playState.statuses])
 
   const onChar = (value: string) => {
