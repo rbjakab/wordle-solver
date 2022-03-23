@@ -42,6 +42,14 @@ export const Keyboard = ({
 }: Props) => {
   const charStatuses = getLettersStatuses(guesses, statuses)
 
+  useEffect(() => {
+    window.addEventListener('keydown', (e) => {
+      if (e.keyCode === 32 && e.target === document.body) {
+        e.preventDefault()
+      }
+    })
+  }, [])
+
   const onClick = (value: string) => {
     if (value === 'ENTER') {
       onEnter()
@@ -62,6 +70,8 @@ export const Keyboard = ({
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
+      e.preventDefault()
+
       if (e.code === 'Enter' && !isEditingMode) {
         onEnter()
       } else if (e.code === 'Backspace' && !isEditingMode) {
