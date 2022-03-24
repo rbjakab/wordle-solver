@@ -1,5 +1,5 @@
 import { MAX_WORD_LENGTH } from '../constants/settings'
-import { WORDS } from '../constants/wordlist'
+import { VALID_GUESSES } from '../constants/validGuesses'
 import { CharStatus } from './statuses'
 import { localeAwareLowerCase } from './words'
 
@@ -165,7 +165,7 @@ export const getWordRecommendations = (
   )
   const multiplexRegex = calculateMultiplexRegexPattern(statuses, guesses)
 
-  let filteredWords = WORDS.filter((word) => word.match(baseRegex))
+  let filteredWords = VALID_GUESSES.filter((word) => word.match(baseRegex))
 
   for (let pattern of multiplexRegex) {
     filteredWords = filteredWords.filter((word) => word.match(pattern))
