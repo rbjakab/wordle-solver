@@ -354,7 +354,7 @@ function App() {
           <p className="mt-6 flex justify-center">
             Made by&nbsp;
             <a
-              href="https://rjakab.vercel.app/"
+              href="https://www.linkedin.com/in/richard-jakab/"
               className="text-blue-500"
               target={'_blank'}
               rel="noreferrer"
